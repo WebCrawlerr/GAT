@@ -1,0 +1,31 @@
+import os
+
+# Paths
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_RAW_DIR = os.path.join(BASE_DIR, 'data', 'raw')
+DATA_PROCESSED_DIR = os.path.join(BASE_DIR, 'data', 'processed')
+MODEL_SAVE_DIR = os.path.join(BASE_DIR, 'models')
+
+# Ensure directories exist
+os.makedirs(DATA_RAW_DIR, exist_ok=True)
+os.makedirs(DATA_PROCESSED_DIR, exist_ok=True)
+os.makedirs(MODEL_SAVE_DIR, exist_ok=True)
+
+# Data Processing
+BINDINGDB_FILENAME = 'BindingDB_All.tsv' # User might need to rename or we detect
+THRESHOLD_NM = 1000.0 # 1 uM
+TARGET_NAMES = ["BRD4", "Bromodomain-containing protein 4"]
+
+# Model Hyperparameters
+GAT_HEADS = 4
+GAT_HIDDEN_DIM = 64
+GAT_LAYERS = 3
+DROPOUT = 0.2
+LEARNING_RATE = 0.001
+WEIGHT_DECAY = 5e-4
+EPOCHS = 100
+BATCH_SIZE = 32
+PATIENCE = 10 # Early stopping
+
+# Random Seed
+SEED = 42
