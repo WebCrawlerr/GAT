@@ -3,37 +3,57 @@ import numpy as np
 from rdkit import Chem
 from src.config import THRESHOLD_NM, TARGET_NAMES
 
-def load_data(filepath):
+def load_and_filter_data(filepath, chunksize=100000):
     """
-    Loads BindingDB data from TSV file.
+    Loads BindingDB data from TSV file in chunks and filters for BRD4 on the fly.
+    This drastically reduces memory usage.
     """
-    # BindingDB TSV can be messy, use error_bad_lines=False or on_bad_lines='skip'
+    print(f"Loading and filtering data from {filepath} in chunks of {chunksize}...")
+    
+    # Target Name is usually the column name in BindingDB
+    target_col = 'Target Name'
+    
+    filtered_chunks = []
+    total_processed = 0
+    
     try:
-        df = pd.read_csv(filepath, sep='\t', on_bad_lines='skip', low_memory=False)
+        # First, peek at columns to ensure we have the right target column
+        # We read just the header
+        header_df = pd.read_csv(filepath, sep='\t', nrows=0)
+        if target_col not in header_df.columns:
+             # Try to find a similar column
+            candidates = [c for c in header_df.columns if 'Target Name' in c]
+            if candidates:
+                target_col = candidates[0]
+                print(f"Using column '{target_col}' for filtering.")
+            else:
+                print("Could not find Target Name column.")
+                return None
+
+        # Iterate in chunks
+        with pd.read_csv(filepath, sep='\t', on_bad_lines='skip', low_memory=False, chunksize=chunksize) as reader:
+            for chunk in reader:
+                # Filter
+                mask = chunk[target_col].apply(lambda x: any(name in str(x) for name in TARGET_NAMES))
+                filtered_chunk = chunk[mask].copy()
+                
+                if not filtered_chunk.empty:
+                    filtered_chunks.append(filtered_chunk)
+                
+                total_processed += len(chunk)
+                if total_processed % (chunksize * 10) == 0:
+                    print(f"Processed {total_processed} rows...")
+                    
     except Exception as e:
         print(f"Error loading data: {e}")
         return None
-    return df
-
-def filter_brd4(df):
-    """
-    Filters the dataframe for BRD4 target.
-    """
-    # Target Name is usually the column name in BindingDB
-    # We look for 'Target Name' column
-    target_col = 'Target Name'
-    if target_col not in df.columns:
-        # Try to find a similar column
-        candidates = [c for c in df.columns if 'Target Name' in c]
-        if candidates:
-            target_col = candidates[0]
-        else:
-            print("Could not find Target Name column.")
-            return pd.DataFrame()
-            
-    # Filter
-    mask = df[target_col].apply(lambda x: any(name in str(x) for name in TARGET_NAMES))
-    return df[mask].copy()
+        
+    if not filtered_chunks:
+        print("No matching records found.")
+        return pd.DataFrame()
+        
+    print(f"Finished processing {total_processed} rows.")
+    return pd.concat(filtered_chunks, ignore_index=True)
 
 def clean_and_label_data(df):
     """

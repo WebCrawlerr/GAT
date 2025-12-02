@@ -3,7 +3,7 @@ import argparse
 import pandas as pd
 import torch
 from src.config import *
-from src.data_processing import load_data, filter_brd4, clean_and_label_data
+from src.data_processing import load_and_filter_data, clean_and_label_data
 from src.dataset import BRD4Dataset, scaffold_split
 from src.train import run_training
 
@@ -34,13 +34,12 @@ def main():
             print("Please download 'BindingDB_All.tsv' (or zip) and place it in data/raw/ or specify path with --raw_file")
             return
             
-        print(f"Loading raw data from {raw_path}...")
-        df = load_data(raw_path)
-        if df is None:
+        # Load and filter in one go to save memory
+        df = load_and_filter_data(raw_path)
+        if df is None or df.empty:
+            print("No data found or error loading data.")
             return
             
-        print("Filtering for BRD4...")
-        df = filter_brd4(df)
         print(f"Found {len(df)} records for BRD4.")
         
         print("Cleaning and Labeling...")
