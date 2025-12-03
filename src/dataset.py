@@ -28,6 +28,7 @@ class BRD4Dataset(InMemoryDataset):
             raise ValueError("Dataframe must be provided for processing.")
         
         data_list = []
+        failed_count = 0
         for _, row in tqdm(self.df.iterrows(), total=len(self.df), desc="Processing Molecules"):
             smiles = row['Ligand SMILES']
             label = row['Label']
@@ -35,6 +36,10 @@ class BRD4Dataset(InMemoryDataset):
             data = smiles_to_graph(smiles, label)
             if data is not None:
                 data_list.append(data)
+            else:
+                failed_count += 1
+                
+        print(f"Processing complete. Successfully processed: {len(data_list)}. Failed: {failed_count}.")
         
         if self.pre_filter is not None:
             data_list = [data for data in data_list if self.pre_filter(data)]
