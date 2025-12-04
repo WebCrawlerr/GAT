@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch_geometric.loader import DataLoader
-from src.utils import calculate_metrics, plot_training_curves, plot_confusion_matrix
+from src.utils import calculate_metrics, plot_training_curves, plot_confusion_matrix, plot_roc_curve, plot_pr_curve
 from src.config import *
 import os
 import numpy as np
@@ -113,5 +113,6 @@ def run_training(train_dataset, val_dataset, test_dataset, config=None):
     # Plots
     plot_training_curves(train_losses, val_aps, os.path.join(BASE_DIR, 'training_curves.png'))
     plot_confusion_matrix(y_true_test, y_pred_test, os.path.join(BASE_DIR, 'confusion_matrix.png'))
-    
+    plot_roc_curve(y_true_test, y_pred_test, os.path.join(BASE_DIR, 'roc_curve.png'))
+    plot_pr_curve(y_true_test, y_pred_test, os.path.join(BASE_DIR, 'pr_curve.png'))    
     return test_metrics
