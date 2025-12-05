@@ -12,8 +12,14 @@ def main():
     parser = argparse.ArgumentParser(description="GAT BRD4 Binding Prediction Pipeline")
     parser.add_argument('--raw_file', type=str, default=os.path.join(DATA_RAW_DIR, BINDINGDB_FILENAME),
                         help='Path to the raw BindingDB TSV file')
+    parser.add_argument('--processed_dir', type=str, default=DATA_PROCESSED_DIR,
+                        help='Directory to save/load processed data')
     parser.add_argument('--cv', type=int, default=0,
                         help='Number of folds for Cross-Validation (0 or 1 to disable)')
+    parser.add_argument('--optimize', action='store_true',
+                        help='Run hyperparameter optimization using Optuna')
+    parser.add_argument('--n_trials', type=int, default=20,
+                        help='Number of trials for optimization')
     args = parser.parse_args()
 
     print("Starting GAT BRD4 Binding Prediction Pipeline...")
@@ -50,8 +56,13 @@ def main():
         print(f"Creating Graph Dataset in {processed_dir} (this may take a while)...")
         dataset = BRD4Dataset(root=processed_dir, df=df)
         
-    # 2. Split Data & Training
-    if args.cv > 1:
+    # 2. Optimization or Split & Train
+    if args.optimize:
+        from src.optimize import run_optimization
+        best_params = run_optimization(dataset, n_trials=args.n_trials)
+        print("\nOptimization finished. You can now update src/config.py with these parameters.")
+        
+    elif args.cv > 1:
         print(f"Starting {args.cv}-Fold Scaffold Cross-Validation...")
         from src.dataset import scaffold_k_fold
         folds = scaffold_k_fold(dataset, k=args.cv)

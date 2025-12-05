@@ -40,7 +40,7 @@ def evaluate(model, loader, device):
     metrics = calculate_metrics(np.array(y_true), np.array(y_pred_logits))
     return metrics, np.array(y_true), np.array(y_pred_logits)
 
-def run_training(train_dataset, val_dataset, test_dataset=None, config=None, fold_idx=None):
+def run_training(train_dataset, val_dataset, test_dataset=None, config=None, fold_idx=None, plot=True):
     # Config overrides
     hidden_dim = config.get('hidden_dim', GAT_HIDDEN_DIM) if config else GAT_HIDDEN_DIM
     heads = config.get('heads', GAT_HEADS) if config else GAT_HEADS
@@ -121,9 +121,10 @@ def run_training(train_dataset, val_dataset, test_dataset=None, config=None, fol
     print(f"{eval_name} Metrics: {test_metrics}")
     
     # Plots
-    plot_training_curves(train_losses, val_aps, os.path.join(BASE_DIR, f'{save_prefix}training_curves.png'))
-    plot_confusion_matrix(y_true_test, y_pred_test, os.path.join(BASE_DIR, f'{save_prefix}confusion_matrix.png'))
-    plot_roc_curve(y_true_test, y_pred_test, os.path.join(BASE_DIR, f'{save_prefix}roc_curve.png'))
-    plot_pr_curve(y_true_test, y_pred_test, os.path.join(BASE_DIR, f'{save_prefix}pr_curve.png'))
+    if plot:
+        plot_training_curves(train_losses, val_aps, os.path.join(BASE_DIR, f'{save_prefix}training_curves.png'))
+        plot_confusion_matrix(y_true_test, y_pred_test, os.path.join(BASE_DIR, f'{save_prefix}confusion_matrix.png'))
+        plot_roc_curve(y_true_test, y_pred_test, os.path.join(BASE_DIR, f'{save_prefix}roc_curve.png'))
+        plot_pr_curve(y_true_test, y_pred_test, os.path.join(BASE_DIR, f'{save_prefix}pr_curve.png'))
     
     return test_metrics
