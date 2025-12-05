@@ -12,6 +12,8 @@ def main():
     parser = argparse.ArgumentParser(description="GAT BRD4 Binding Prediction Pipeline")
     parser.add_argument('--raw_file', type=str, default=os.path.join(DATA_RAW_DIR, BINDINGDB_FILENAME),
                         help='Path to the raw BindingDB TSV file')
+    parser.add_argument('--processed_dir', type=str, default=DATA_PROCESSED_DIR,
+                        help='Directory to save/load processed data')
     parser.add_argument('--cv', type=int, default=0,
                         help='Number of folds for Cross-Validation (0 or 1 to disable)')
     args = parser.parse_args()
