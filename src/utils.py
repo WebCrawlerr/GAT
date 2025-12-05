@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import roc_auc_score, average_precision_score, f1_score, confusion_matrix, roc_curve
+from sklearn.metrics import roc_auc_score, average_precision_score, f1_score, confusion_matrix, roc_curve, fbeta_score
 import seaborn as sns
 import os
 
@@ -21,31 +21,32 @@ def calculate_metrics(y_true, y_pred_logits):
         
     ap = average_precision_score(y_true, y_probs)
     f1 = f1_score(y_true, y_pred)
+    fbeta = fbeta_score(y_true, y_pred, beta=0.5)
     
     return {
         'AUC': auc,
         'AP': ap,
-        'F1': f1
+        'F1': f1,
+        'F0.5': fbeta
     }
 
-def plot_training_curves(train_losses, val_aps, save_path):
-    plt.figure(figsize=(12, 5))
-    
-    plt.subplot(1, 2, 1)
+def plot_loss_curve(train_losses, save_path):
+    plt.figure(figsize=(6, 5))
     plt.plot(train_losses, label='Train Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.title('Training Loss')
     plt.legend()
-    
-    plt.subplot(1, 2, 2)
+    plt.savefig(save_path)
+    plt.close()
+
+def plot_val_ap_curve(val_aps, save_path):
+    plt.figure(figsize=(6, 5))
     plt.plot(val_aps, label='Val AP')
     plt.xlabel('Epoch')
     plt.ylabel('Average Precision')
     plt.title('Validation AP')
     plt.legend()
-    
-    plt.tight_layout()
     plt.savefig(save_path)
     plt.close()
 

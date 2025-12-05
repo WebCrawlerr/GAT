@@ -7,7 +7,7 @@ import shutil
 # Add src to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.utils import plot_roc_curve, plot_pr_curve
+from src.utils import plot_roc_curve, plot_pr_curve, plot_loss_curve, plot_val_ap_curve
 
 def test_plotting_functions():
     print("Testing plotting functions...")
@@ -31,6 +31,18 @@ def test_plotting_functions():
     plot_pr_curve(y_true, y_pred_logits, pr_path)
     assert os.path.exists(pr_path)
     print("PR Curve plot generated successfully.")
+
+    # Test Loss Curve
+    loss_path = os.path.join(output_dir, "loss_curve.png")
+    plot_loss_curve([0.5, 0.4, 0.3], loss_path)
+    assert os.path.exists(loss_path)
+    print("Loss Curve plot generated successfully.")
+
+    # Test Val AP Curve
+    ap_path = os.path.join(output_dir, "val_ap_curve.png")
+    plot_val_ap_curve([0.5, 0.6, 0.7], ap_path)
+    assert os.path.exists(ap_path)
+    print("Val AP Curve plot generated successfully.")
     
     # Cleanup
     shutil.rmtree(output_dir)
