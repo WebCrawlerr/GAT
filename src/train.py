@@ -40,7 +40,7 @@ def evaluate(model, loader, device):
     metrics = calculate_metrics(np.array(y_true), np.array(y_pred_logits))
     return metrics, np.array(y_true), np.array(y_pred_logits)
 
-def run_training(train_dataset, val_dataset, test_dataset=None, config=None, fold_idx=None, plot=True):
+def run_training(train_dataset, val_dataset, test_dataset=None, config=None, fold_idx=None, plot=True, verbose=True):
     # Config overrides
     hidden_dim = config.get('hidden_dim', GAT_HIDDEN_DIM) if config else GAT_HIDDEN_DIM
     heads = config.get('heads', GAT_HEADS) if config else GAT_HEADS
@@ -49,10 +49,11 @@ def run_training(train_dataset, val_dataset, test_dataset=None, config=None, fol
     lr = config.get('lr', LEARNING_RATE) if config else LEARNING_RATE
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    if fold_idx is not None:
-        print(f"Using device: {device} for Fold {fold_idx}")
-    else:
-        print(f"Using device: {device}")
+    if verbose:
+        if fold_idx is not None:
+            print(f"Using device: {device} for Fold {fold_idx}")
+        else:
+            print(f"Using device: {device}")
     
     # DataLoaders
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
@@ -95,7 +96,8 @@ def run_training(train_dataset, val_dataset, test_dataset=None, config=None, fol
         train_losses.append(loss)
         val_aps.append(val_ap)
         
-        print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Val AP: {val_ap:.4f}, Val AUC: {val_metrics["AUC"]:.4f}')
+        if verbose:
+            print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Val AP: {val_ap:.4f}, Val AUC: {val_metrics["AUC"]:.4f}')
         
         # Early Stopping
         if val_ap > best_val_ap:
