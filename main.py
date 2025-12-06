@@ -36,22 +36,33 @@ def main():
         print(f"Found processed data at {processed_path}. Loading...")
         dataset = BRD4Dataset(root=processed_dir)
     else:
-        if not os.path.exists(raw_path):
-            print(f"ERROR: Raw data file not found at {raw_path}")
-            print("Please download 'BindingDB_All.tsv' (or zip) and place it in data/raw/ or specify path with --raw_file")
-            return
-            
-        # Load and filter in one go to save memory
-        df = load_and_filter_data(raw_path)
-        if df is None or df.empty:
-            print("No data found or error loading data.")
-            return
-            
-        print(f"Found {len(df)} records for BRD4.")
+        # Check for cached CSV
+        filtered_csv_path = os.path.join(processed_dir, 'brd4_filtered.csv')
         
-        print("Cleaning and Labeling...")
-        df = clean_and_label_data(df)
-        print(f"Final dataset size: {len(df)}")
+        if os.path.exists(filtered_csv_path):
+            print(f"Loading cached filtered data from {filtered_csv_path}...")
+            df = pd.read_csv(filtered_csv_path)
+            print(f"Loaded {len(df)} records.")
+        else:
+            if not os.path.exists(raw_path):
+                print(f"ERROR: Raw data file not found at {raw_path}")
+                print("Please download 'BindingDB_All.tsv' (or zip) and place it in data/raw/ or specify path with --raw_file")
+                return
+                
+            # Load and filter in one go to save memory
+            df = load_and_filter_data(raw_path)
+            if df is None or df.empty:
+                print("No data found or error loading data.")
+                return
+                
+            print(f"Found {len(df)} records for BRD4.")
+            
+            print("Cleaning and Labeling...")
+            df = clean_and_label_data(df)
+            print(f"Final dataset size: {len(df)}")
+            
+            print(f"Saving filtered data to {filtered_csv_path}...")
+            df.to_csv(filtered_csv_path, index=False)
         
         print(f"Creating Graph Dataset in {processed_dir} (this may take a while)...")
         dataset = BRD4Dataset(root=processed_dir, df=df)

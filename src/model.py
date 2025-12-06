@@ -1,7 +1,47 @@
 import torch
 import torch.nn.functional as F
 from torch.nn import Linear, Dropout
-from torch_geometric.nn import GATConv, global_mean_pool, global_add_pool
+from torch_geometric.nn import GATConv, GCNConv, global_mean_pool, global_add_pool
+
+class GCNModel(torch.nn.Module):
+    def __init__(self, num_node_features, num_edge_features, hidden_dim=64, num_layers=3, dropout=0.2):
+        super(GCNModel, self).__init__()
+        self.dropout_ratio = dropout
+        
+        self.convs = torch.nn.ModuleList()
+        
+        # First layer
+        self.convs.append(GCNConv(num_node_features, hidden_dim))
+        
+        # Hidden layers
+        for _ in range(num_layers - 2):
+            self.convs.append(GCNConv(hidden_dim, hidden_dim))
+            
+        # Last conv layer
+        self.convs.append(GCNConv(hidden_dim, hidden_dim))
+        
+        # Pooling -> MLP
+        self.lin1 = Linear(hidden_dim, hidden_dim)
+        self.lin2 = Linear(hidden_dim, 1)
+
+    def forward(self, data):
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+        
+        # GCN Layers
+        for conv in self.convs:
+            x = conv(x, edge_index)
+            x = F.relu(x)
+            x = F.dropout(x, p=self.dropout_ratio, training=self.training)
+            
+        # Global Pooling
+        x = global_mean_pool(x, batch)
+        
+        # MLP Classifier
+        x = F.relu(self.lin1(x))
+        x = F.dropout(x, p=self.dropout_ratio, training=self.training)
+        x = self.lin2(x)
+        
+        return x
 
 class GATModel(torch.nn.Module):
     def __init__(self, num_node_features, num_edge_features, hidden_dim=64, heads=4, num_layers=3, dropout=0.2):
